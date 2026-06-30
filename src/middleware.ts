@@ -13,9 +13,18 @@ export async function middleware(request: NextRequest) {
   const serviceKey = process.env.SERVICE_SUPABASE!;
   const projectRef = supabaseUrl.split("//")[1].split(".")[0];
 
-  // Supabase v2 stores session as JSON in this cookie
+  // Supabase v2 may split cookie into chunks: sb-xxx-auth-token.0, .1, etc.
   const cookieKey = `sb-${projectRef}-auth-token`;
-  const raw = request.cookies.get(cookieKey)?.value;
+  const allCookies = request.cookies.getAll();
+
+  // Collect chunks if split, or single cookie
+  const chunks = allCookies
+    .filter((c) => c.name === cookieKey || c.name.startsWith(`${cookieKey}.`))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const raw = chunks.length > 0
+    ? chunks.map((c) => c.value).join("")
+    : null;
 
   let accessToken: string | null = null;
   if (raw) {
