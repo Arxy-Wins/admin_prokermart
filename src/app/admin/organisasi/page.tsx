@@ -134,12 +134,6 @@ export default function OrganisasiPage() {
             Approve, suspend, atau undang organisasi baru.
           </p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-4 py-2.5 rounded-xl transition-colors shrink-0"
-        >
-          <Plus className="w-4 h-4" /> Tambah Toko
-        </button>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
@@ -159,7 +153,7 @@ export default function OrganisasiPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari nama toko..."
+            placeholder="Cari nama organisasi..."
             className="text-sm w-full focus:outline-none"
           />
         </div>
