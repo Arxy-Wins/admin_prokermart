@@ -4,13 +4,26 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  LayoutDashboard, Store, Layers, Users, ShoppingCart,
-  Wallet, Package, LogOut, Menu, X, ShieldCheck, MessageSquare, Settings,
+  LayoutDashboard,
+  Store,
+  Layers,
+  Users,
+  ShoppingCart,
+  Wallet,
+  Package,
+  LogOut,
+  Menu,
+  X,
+  ShieldCheck,
+  MessageSquare,
+  Settings,
+  Building2,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard, exact: true },
+  { label: "Verifikasi", href: "/admin/organisasi", icon: Building2 },
   { label: "Toko", href: "/admin/toko", icon: Store },
   { label: "Sub-Toko", href: "/admin/sub-toko", icon: Layers },
   { label: "Pengguna", href: "/admin/pengguna", icon: Users },
@@ -21,7 +34,11 @@ const NAV_ITEMS = [
   { label: "Pengaturan", href: "/admin/pengaturan", icon: Settings },
 ];
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -40,7 +57,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     router.push("/login");
   };
 
-  const isActive = (item: typeof NAV_ITEMS[0]) =>
+  const isActive = (item: (typeof NAV_ITEMS)[0]) =>
     item.exact ? pathname === item.href : pathname.startsWith(item.href);
 
   const Sidebar = () => (
@@ -74,7 +91,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </nav>
       <div className="px-3 py-4 border-t border-slate-800">
         <div className="px-3 mb-2">
-          <p className="text-[10px] text-slate-500 uppercase tracking-wide">Login sebagai</p>
+          <p className="text-[10px] text-slate-500 uppercase tracking-wide">
+            Login sebagai
+          </p>
           <p className="text-xs text-slate-300 truncate">{adminEmail}</p>
         </div>
         <button
@@ -98,7 +117,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setSidebarOpen(false)}
+          />
           <div className="absolute left-0 top-0 bottom-0 w-56">
             <Sidebar />
           </div>
