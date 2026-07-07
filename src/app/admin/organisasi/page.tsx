@@ -127,9 +127,11 @@ export default function OrganisasiPage() {
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900">Manajemen Toko</h1>
+          <h1 className="text-2xl font-black text-slate-900">
+            Manajemen Organisasi
+          </h1>
           <p className="text-sm text-slate-500">
-            Approve, suspend, atau undang toko baru.
+            Approve, suspend, atau undang organisasi baru.
           </p>
         </div>
         <button
