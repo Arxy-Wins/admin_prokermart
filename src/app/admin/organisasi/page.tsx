@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, CheckCircle, XCircle, Loader2, Plus, X } from "lucide-react";
 
-type StatusFilter = "semua" | "active" | "inactive" | "suspended";
+type StatusFilter = "semua" | "pending" | "verified" | "rejected" | "suspended";
 
 interface Organisasi {
   id_organisasi: string;
@@ -14,14 +14,16 @@ interface Organisasi {
 }
 
 const STATUS_BADGE: Record<string, string> = {
-  active: "bg-emerald-100 text-emerald-700",
-  inactive: "bg-red-100 text-red-700",
-  suspended: "bg-amber-100 text-amber-700",
+  pending: "bg-amber-100 text-amber-700",
+  verified: "bg-emerald-100 text-emerald-700",
+  rejected: "bg-red-100 text-red-700",
+  suspended: "bg-slate-800 text-white",
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  active: "Aktif",
-  inactive: "Nonaktif",
+  pending: "Menunggu",
+  verified: "Terverifikasi",
+  rejected: "Ditolak",
   suspended: "Suspended",
 };
 
@@ -118,8 +120,9 @@ export default function OrganisasiPage() {
 
   const TABS: { key: StatusFilter; label: string }[] = [
     { key: "semua", label: "Semua" },
-    { key: "active", label: "Aktif" },
-    { key: "inactive", label: "Nonaktif" },
+    { key: "pending", label: "Menunggu" },
+    { key: "verified", label: "Terverifikasi" },
+    { key: "rejected", label: "Ditolak" },
     { key: "suspended", label: "Suspended" },
   ];
 
@@ -217,10 +220,10 @@ export default function OrganisasiPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex gap-2">
-                          {t.status_verifikasi !== "active" && (
+                          {t.status_verifikasi !== "verified" && (
                             <button
                               onClick={() =>
-                                updateStatus(t.id_organisasi, "active")
+                                updateStatus(t.id_organisasi, "verified")
                               }
                               disabled={actionLoading === t.id_organisasi}
                               className="flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
