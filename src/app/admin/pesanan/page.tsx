@@ -3,6 +3,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Loader2, RefreshCw } from "lucide-react";
+import ExportButton from "@/components/ExportButton";
+import PrintButton from "@/components/PrintButton";
+import PrintHeader from "@/components/PrintHeader";
 
 type StatusFilter = "semua" | "menunggu_pembayaran" | "menunggu_konfirmasi" | "diproses" | "siap_diambil" | "selesai" | "dibatalkan";
 
@@ -65,19 +68,44 @@ export default function PesananPage() {
     { key: "dibatalkan", label: "Dibatalkan" },
   ];
 
+  const exportHeaders = ["ID Pesanan", "Sub-Toko", "Total", "Metode Bayar", "Status", "Tgl. Pesan"];
+  const exportRows = list.map((o) => [
+    o.id_pesanan,
+    o.sub_toko?.nama_proker ?? "—",
+    Number(o.total_harga),
+    o.pembayaran?.metode_pembayaran ?? "—",
+    o.status_pesanan,
+    new Date(o.tgl_pesan).toLocaleDateString("id-ID"),
+  ]);
+
+  const statusLabel = TABS.find((t) => t.key === filter)?.label ?? "Semua";
+  const periodLabel = dateFrom || dateTo ? `${dateFrom || "awal"} s/d ${dateTo || "sekarang"}` : "";
+
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div className="flex items-center justify-between gap-4">
+    <div className="max-w-6xl mx-auto space-y-6 print-area">
+      <PrintHeader
+        title="Monitor Pesanan"
+        filters={[
+          { label: "Status", value: filter !== "semua" ? statusLabel : "" },
+          { label: "Periode", value: periodLabel },
+        ]}
+      />
+
+      <div className="flex items-center justify-between gap-4 no-print">
         <div>
           <h1 className="text-2xl font-black text-slate-900">Monitor Pesanan</h1>
           <p className="text-sm text-slate-500">Pantau semua transaksi real-time (refresh otomatis 30 detik).</p>
         </div>
-        <button onClick={fetchData} className="flex items-center gap-2 text-sm bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-3 py-2 rounded-xl transition-colors">
-          <RefreshCw className="w-4 h-4" /> Refresh
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <ExportButton filename="pesanan" title="Data Pesanan" headers={exportHeaders} rows={exportRows} />
+          <PrintButton />
+          <button onClick={fetchData} className="flex items-center gap-2 text-sm bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-3 py-2 rounded-xl transition-colors">
+            <RefreshCw className="w-4 h-4" /> Refresh
+          </button>
+        </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
+      <div className="flex flex-col sm:flex-row gap-3 flex-wrap no-print">
         <div className="flex gap-1 flex-wrap">
           {TABS.map((t) => (
             <button key={t.key} onClick={() => setFilter(t.key)}

@@ -108,7 +108,7 @@ export default function AdminLayout({
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
       {/* Desktop sidebar */}
-      <div className="hidden md:flex w-56 shrink-0 flex-col">
+      <div className="hidden md:flex w-56 shrink-0 flex-col no-print">
         <Sidebar />
       </div>
 
@@ -128,7 +128,7 @@ export default function AdminLayout({
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3 shrink-0">
+        <header className="bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3 shrink-0 no-print">
           <button
             onClick={() => setSidebarOpen(true)}
             className="md:hidden text-slate-500 hover:text-slate-700"

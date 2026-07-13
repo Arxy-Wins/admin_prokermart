@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Search, CheckCircle, XCircle, Trash2, Loader2 } from "lucide-react";
+import ExportButton from "@/components/ExportButton";
 
 type StatusFilter = "semua" | "active" | "inactive" | "suspended";
 
@@ -96,11 +97,21 @@ export default function SubTokoPage() {
     { key: "suspended", label: "Suspended" },
   ];
 
+  const exportHeaders = ["Nama Sub-Toko", "Toko Induk", "Status"];
+  const exportRows = filtered.map((s) => [
+    s.nama_proker,
+    s.toko?.nama_toko ?? "—",
+    STATUS_LABEL[s.status] ?? s.status,
+  ]);
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-black text-slate-900">Manajemen Sub-Toko</h1>
-        <p className="text-sm text-slate-500">Kelola semua sub-toko (proker) di platform.</p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900">Manajemen Sub-Toko</h1>
+          <p className="text-sm text-slate-500">Kelola semua sub-toko (proker) di platform.</p>
+        </div>
+        <ExportButton filename="sub-toko" title="Data Sub-Toko" headers={exportHeaders} rows={exportRows} />
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">

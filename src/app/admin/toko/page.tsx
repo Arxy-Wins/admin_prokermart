@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, CheckCircle, XCircle, Trash2, Loader2, Plus, X } from "lucide-react";
+import ExportButton from "@/components/ExportButton";
 
 type StatusFilter = "semua" | "active" | "inactive" | "suspended" | "pending";
 
@@ -128,6 +129,14 @@ export default function TokoPage() {
     return matchStatus && matchSearch;
   });
 
+  const exportHeaders = ["Nama Toko", "Organisasi", "Status", "Tgl. Dibuat"];
+  const exportRows = filtered.map((t) => [
+    t.nama_toko,
+    t.organisasi?.nama_organisasi ?? "—",
+    STATUS_LABEL[t.status] ?? t.status,
+    t.tgl_dibuat ? new Date(t.tgl_dibuat).toLocaleDateString("id-ID") : "—",
+  ]);
+
   const TABS: { key: StatusFilter; label: string }[] = [
     { key: "semua", label: "Semua" },
     { key: "pending", label: "Pending" },
@@ -143,10 +152,13 @@ export default function TokoPage() {
           <h1 className="text-2xl font-black text-slate-900">Manajemen Toko</h1>
           <p className="text-sm text-slate-500">Approve, suspend, atau undang toko baru.</p>
         </div>
-        <button onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-4 py-2.5 rounded-xl transition-colors shrink-0">
-          <Plus className="w-4 h-4" /> Tambah Toko
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <ExportButton filename="toko" title="Data Toko" headers={exportHeaders} rows={exportRows} />
+          <button onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-4 py-2.5 rounded-xl transition-colors">
+            <Plus className="w-4 h-4" /> Tambah Toko
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">

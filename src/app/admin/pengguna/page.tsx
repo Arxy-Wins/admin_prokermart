@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, XCircle, Trash2, Loader2 } from "lucide-react";
+import ExportButton from "@/components/ExportButton";
 
 type RoleFilter = "semua" | "pembeli" | "organisasi" | "proker";
 
@@ -106,11 +107,23 @@ export default function PenggunaPage() {
     { key: "proker", label: "Proker" },
   ];
 
+  const exportHeaders = ["Nama", "Email", "Role", "Status", "Tgl. Daftar"];
+  const exportRows = filtered.map((p) => [
+    p.nama ?? "—",
+    p.email,
+    p.role,
+    STATUS_LABEL[p.status] ?? p.status ?? "Aktif",
+    new Date(p.created_at).toLocaleDateString("id-ID"),
+  ]);
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-black text-slate-900">Manajemen Pengguna</h1>
-        <p className="text-sm text-slate-500">Pantau semua akun pengguna platform.</p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900">Manajemen Pengguna</h1>
+          <p className="text-sm text-slate-500">Pantau semua akun pengguna platform.</p>
+        </div>
+        <ExportButton filename="pengguna" title="Data Pengguna" headers={exportHeaders} rows={exportRows} />
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">

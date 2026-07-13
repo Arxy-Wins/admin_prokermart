@@ -11,3 +11,15 @@
 html {
   scrollbar-color: #334155 #0f172a;
 }
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-area {
+    max-width: none !important;
+  }
+  body {
+    background: white !important;
+  }
+}

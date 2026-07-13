@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Trash2, Loader2 } from "lucide-react";
+import ExportButton from "@/components/ExportButton";
 
 interface Produk {
   id_produk: string;
@@ -87,11 +88,23 @@ export default function ProdukPage() {
     return matchSearch && matchSubToko;
   });
 
+  const exportHeaders = ["Nama Produk", "Sub-Toko", "Harga", "Stok", "Status"];
+  const exportRows = filtered.map((p) => [
+    p.nama_produk,
+    p.sub_toko?.nama_proker ?? "—",
+    Number(p.harga),
+    p.stok,
+    p.status_aktif ? "Aktif" : "Nonaktif",
+  ]);
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-black text-slate-900">Manajemen Produk</h1>
-        <p className="text-sm text-slate-500">Pantau dan kelola semua produk di platform.</p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900">Manajemen Produk</h1>
+          <p className="text-sm text-slate-500">Pantau dan kelola semua produk di platform.</p>
+        </div>
+        <ExportButton filename="produk" title="Data Produk" headers={exportHeaders} rows={exportRows} />
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
