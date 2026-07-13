@@ -2,15 +2,16 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, CheckCircle, XCircle, Loader2, Plus, X } from "lucide-react";
+import { Search, CheckCircle, XCircle, Trash2, Loader2, Plus, X } from "lucide-react";
 
-type StatusFilter = "semua" | "active" | "inactive" | "suspended";
+type StatusFilter = "semua" | "active" | "inactive" | "suspended" | "pending";
 
 interface Toko {
-  id_toko: string;
+  id_toko: string | null;
+  id_undangan?: string;
   nama_toko: string;
   status: string;
-  tgl_dibuat: string;
+  tgl_dibuat: string | null;
   organisasi: { nama_organisasi: string } | null;
 }
 
@@ -18,12 +19,14 @@ const STATUS_BADGE: Record<string, string> = {
   active: "bg-emerald-100 text-emerald-700",
   inactive: "bg-red-100 text-red-700",
   suspended: "bg-amber-100 text-amber-700",
+  pending: "bg-blue-100 text-blue-700",
 };
 
 const STATUS_LABEL: Record<string, string> = {
   active: "Aktif",
   inactive: "Nonaktif",
   suspended: "Suspended",
+  pending: "Pending",
 };
 
 export default function TokoPage() {
@@ -71,6 +74,25 @@ export default function TokoPage() {
     }
   };
 
+  const deleteToko = async (t: Toko) => {
+    const key = t.id_toko ?? t.id_undangan!;
+    if (!confirm(t.status === "pending" ? "Batalkan undangan ini?" : `Hapus toko "${t.nama_toko}"? Tindakan ini tidak bisa dibatalkan.`)) return;
+    setActionLoading(key);
+    try {
+      const res = await fetch("/api/admin/toko", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(t.status === "pending" ? { id_undangan: t.id_undangan } : { id_toko: t.id_toko }),
+      });
+      if (!res.ok) throw new Error("Failed to delete");
+      setTokoList((prev) => prev.filter((x) => (x.id_toko ?? x.id_undangan) !== key));
+    } catch (err) {
+      console.error("[Toko - delete] Error:", err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     setInviteError("");
@@ -108,6 +130,7 @@ export default function TokoPage() {
 
   const TABS: { key: StatusFilter; label: string }[] = [
     { key: "semua", label: "Semua" },
+    { key: "pending", label: "Pending" },
     { key: "active", label: "Aktif" },
     { key: "inactive", label: "Nonaktif" },
     { key: "suspended", label: "Suspended" },
@@ -158,8 +181,10 @@ export default function TokoPage() {
               <tbody className="divide-y divide-slate-100">
                 {filtered.length === 0 ? (
                   <tr><td colSpan={5} className="text-center py-10 text-slate-400">Tidak ada toko ditemukan.</td></tr>
-                ) : filtered.map((t) => (
-                  <tr key={t.id_toko} className="hover:bg-slate-50 transition-colors">
+                ) : filtered.map((t) => {
+                  const key = t.id_toko ?? t.id_undangan!;
+                  return (
+                  <tr key={key} className="hover:bg-slate-50 transition-colors">
                     <td className="px-4 py-3 font-medium text-slate-900">{t.nama_toko}</td>
                     <td className="px-4 py-3 text-slate-500">{(t.organisasi as any)?.nama_organisasi ?? "—"}</td>
                     <td className="px-4 py-3">
@@ -167,27 +192,42 @@ export default function TokoPage() {
                         {STATUS_LABEL[t.status] ?? t.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-slate-500 text-xs">{new Date(t.tgl_dibuat).toLocaleDateString("id-ID")}</td>
+                    <td className="px-4 py-3 text-slate-500 text-xs">{t.tgl_dibuat ? new Date(t.tgl_dibuat).toLocaleDateString("id-ID") : "—"}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
-                        {t.status !== "active" && (
-                          <button onClick={() => updateStatus(t.id_toko, "active")} disabled={actionLoading === t.id_toko}
-                            className="flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50">
-                            {actionLoading === t.id_toko ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3 h-3" />}
-                            Approve
+                        {t.status === "pending" ? (
+                          <button onClick={() => deleteToko(t)} disabled={actionLoading === key}
+                            className="flex items-center gap-1 text-xs bg-slate-50 text-slate-700 hover:bg-slate-100 font-medium px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50">
+                            {actionLoading === key ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
+                            Batal
                           </button>
-                        )}
-                        {t.status !== "suspended" && (
-                          <button onClick={() => updateStatus(t.id_toko, "suspended")} disabled={actionLoading === t.id_toko}
-                            className="flex items-center gap-1 text-xs bg-red-50 text-red-700 hover:bg-red-100 font-medium px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50">
-                            {actionLoading === t.id_toko ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
-                            Suspend
-                          </button>
+                        ) : (
+                          <>
+                            {t.status === "suspended" ? (
+                              <button onClick={() => updateStatus(t.id_toko!, "active")} disabled={actionLoading === key}
+                                className="flex items-center gap-1 text-xs bg-slate-50 text-slate-700 hover:bg-slate-100 font-medium px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50">
+                                {actionLoading === key ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3 h-3" />}
+                                Aktifkan
+                              </button>
+                            ) : (
+                              <button onClick={() => updateStatus(t.id_toko!, "suspended")} disabled={actionLoading === key}
+                                className="flex items-center gap-1 text-xs bg-amber-50 text-amber-700 hover:bg-amber-100 font-medium px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50">
+                                {actionLoading === key ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
+                                Suspend
+                              </button>
+                            )}
+                            <button onClick={() => deleteToko(t)} disabled={actionLoading === key}
+                              className="flex items-center gap-1 text-xs bg-red-50 text-red-700 hover:bg-red-100 font-medium px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50">
+                              {actionLoading === key ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                              Hapus
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

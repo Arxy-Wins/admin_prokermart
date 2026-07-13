@@ -17,13 +17,11 @@ import {
   ShieldCheck,
   MessageSquare,
   Settings,
-  Building2,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard, exact: true },
-  { label: "Verifikasi", href: "/admin/organisasi", icon: Building2 },
   { label: "Toko", href: "/admin/toko", icon: Store },
   { label: "Sub-Toko", href: "/admin/sub-toko", icon: Layers },
   { label: "Pengguna", href: "/admin/pengguna", icon: Users },

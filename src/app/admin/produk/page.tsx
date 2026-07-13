@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Trash2, Loader2 } from "lucide-react";
 
 interface Produk {
   id_produk: string;
@@ -58,6 +58,24 @@ export default function ProdukPage() {
       setList((prev) => prev.map((p) => p.id_produk === id ? { ...p, status_aktif: !currentAktif } : p));
     } catch (err) {
       console.error("[Produk - toggleStatus] Error:", err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const deleteProduk = async (p: Produk) => {
+    if (!confirm(`Hapus produk "${p.nama_produk}"? Tindakan ini tidak bisa dibatalkan.`)) return;
+    setActionLoading(p.id_produk);
+    try {
+      const res = await fetch("/api/admin/produk", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id_produk: p.id_produk }),
+      });
+      if (!res.ok) throw new Error("Failed to delete");
+      setList((prev) => prev.filter((x) => x.id_produk !== p.id_produk));
+    } catch (err) {
+      console.error("[Produk - delete] Error:", err);
     } finally {
       setActionLoading(null);
     }
@@ -121,18 +139,28 @@ export default function ProdukPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => toggleStatus(p.id_produk, p.status_aktif)}
-                        disabled={actionLoading === p.id_produk}
-                        className={`text-xs font-medium px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1 ${
-                          p.status_aktif
-                            ? "bg-red-50 text-red-700 hover:bg-red-100"
-                            : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                        }`}
-                      >
-                        {actionLoading === p.id_produk && <Loader2 className="w-3 h-3 animate-spin" />}
-                        {p.status_aktif ? "Nonaktifkan" : "Aktifkan"}
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => toggleStatus(p.id_produk, p.status_aktif)}
+                          disabled={actionLoading === p.id_produk}
+                          className={`text-xs font-medium px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1 ${
+                            p.status_aktif
+                              ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
+                              : "bg-slate-50 text-slate-700 hover:bg-slate-100"
+                          }`}
+                        >
+                          {actionLoading === p.id_produk && <Loader2 className="w-3 h-3 animate-spin" />}
+                          {p.status_aktif ? "Nonaktifkan" : "Aktifkan"}
+                        </button>
+                        <button
+                          onClick={() => deleteProduk(p)}
+                          disabled={actionLoading === p.id_produk}
+                          className="flex items-center gap-1 text-xs bg-red-50 text-red-700 hover:bg-red-100 font-medium px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
+                        >
+                          {actionLoading === p.id_produk ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                          Hapus
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

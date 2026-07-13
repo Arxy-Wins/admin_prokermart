@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     const { data: inv, error: invErr } = await supabase
       .from("undangan_admin")
-      .select("id, email, status")
+      .select("id, email, status, jabatan")
       .eq("token", token)
       .single();
 
@@ -55,6 +55,8 @@ export async function POST(req: NextRequest) {
       email: inv.email,
       password: "",
       role: "admin",
+      jabatan: inv.jabatan ?? "anggota",
+      status: "active",
     }, { onConflict: "id_pengguna" });
     if (penggunaErr) throw penggunaErr;
 

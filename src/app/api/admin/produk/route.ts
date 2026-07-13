@@ -32,3 +32,16 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { id_produk } = await req.json();
+    const supabase = getClient();
+    const { error } = await supabase.from("produk").delete().eq("id_produk", id_produk);
+    if (error) throw error;
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[Produk API - DELETE] Error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Search, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { Search, CheckCircle, XCircle, Trash2, Loader2 } from "lucide-react";
 
 type StatusFilter = "semua" | "active" | "inactive" | "suspended";
 
@@ -60,6 +60,24 @@ export default function SubTokoPage() {
       setList((prev) => prev.map((s) => s.id_sub_toko === id ? { ...s, status } : s));
     } catch (err) {
       console.error("[SubToko - updateStatus] Error:", err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const deleteSubToko = async (s: SubToko) => {
+    if (!confirm(`Hapus sub-toko "${s.nama_proker}"? Tindakan ini tidak bisa dibatalkan.`)) return;
+    setActionLoading(s.id_sub_toko);
+    try {
+      const res = await fetch("/api/admin/sub-toko", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id_sub_toko: s.id_sub_toko }),
+      });
+      if (!res.ok) throw new Error("Failed to delete");
+      setList((prev) => prev.filter((x) => x.id_sub_toko !== s.id_sub_toko));
+    } catch (err) {
+      console.error("[SubToko - delete] Error:", err);
     } finally {
       setActionLoading(null);
     }
@@ -127,20 +145,25 @@ export default function SubTokoPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
-                        {s.status !== "active" && (
+                        {s.status === "suspended" && (
                           <button onClick={() => updateStatus(s.id_sub_toko, "active")} disabled={actionLoading === s.id_sub_toko}
-                            className="flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50">
+                            className="flex items-center gap-1 text-xs bg-slate-50 text-slate-700 hover:bg-slate-100 font-medium px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50">
                             {actionLoading === s.id_sub_toko ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3 h-3" />}
-                            Approve
+                            Aktifkan
                           </button>
                         )}
                         {s.status !== "suspended" && (
                           <button onClick={() => updateStatus(s.id_sub_toko, "suspended")} disabled={actionLoading === s.id_sub_toko}
-                            className="flex items-center gap-1 text-xs bg-red-50 text-red-700 hover:bg-red-100 font-medium px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50">
+                            className="flex items-center gap-1 text-xs bg-amber-50 text-amber-700 hover:bg-amber-100 font-medium px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50">
                             {actionLoading === s.id_sub_toko ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
                             Suspend
                           </button>
                         )}
+                        <button onClick={() => deleteSubToko(s)} disabled={actionLoading === s.id_sub_toko}
+                          className="flex items-center gap-1 text-xs bg-red-50 text-red-700 hover:bg-red-100 font-medium px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50">
+                          {actionLoading === s.id_sub_toko ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                          Hapus
+                        </button>
                       </div>
                     </td>
                   </tr>

@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Loader2 } from "lucide-react";
+import { Search, X, XCircle, Trash2, Loader2 } from "lucide-react";
 
-type RoleFilter = "semua" | "pembeli" | "organisasi" | "proker" | "admin";
+type RoleFilter = "semua" | "pembeli" | "organisasi" | "proker";
 
 interface Pengguna {
   id_pengguna: string;
   nama: string;
   email: string;
   role: string;
+  status: string;
   created_at: string;
 }
 
@@ -21,12 +22,23 @@ const ROLE_BADGE: Record<string, string> = {
   pembeli: "bg-slate-100 text-slate-600",
 };
 
+const STATUS_BADGE: Record<string, string> = {
+  active: "bg-emerald-100 text-emerald-700",
+  suspended: "bg-amber-100 text-amber-700",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  active: "Aktif",
+  suspended: "Suspended",
+};
+
 export default function PenggunaPage() {
   const [list, setList] = useState<Pengguna[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<RoleFilter>("semua");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Pengguna | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -44,7 +56,43 @@ export default function PenggunaPage() {
     fetchData();
   }, []);
 
+  const updateStatus = async (id: string, status: string) => {
+    setActionLoading(id);
+    try {
+      const res = await fetch("/api/admin/pengguna", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id_pengguna: id, status }),
+      });
+      if (!res.ok) throw new Error("Failed to update status");
+      setList((prev) => prev.map((p) => p.id_pengguna === id ? { ...p, status } : p));
+    } catch (err) {
+      console.error("[Pengguna - updateStatus] Error:", err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const deletePengguna = async (p: Pengguna) => {
+    if (!confirm(`Hapus pengguna "${p.nama ?? p.email}"? Tindakan ini tidak bisa dibatalkan.`)) return;
+    setActionLoading(p.id_pengguna);
+    try {
+      const res = await fetch("/api/admin/pengguna", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id_pengguna: p.id_pengguna }),
+      });
+      if (!res.ok) throw new Error("Failed to delete");
+      setList((prev) => prev.filter((x) => x.id_pengguna !== p.id_pengguna));
+    } catch (err) {
+      console.error("[Pengguna - delete] Error:", err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const filtered = list.filter((p) => {
+    if (p.role === "admin") return false;
     const matchRole = filter === "semua" || p.role === filter;
     const q = search.toLowerCase();
     const matchSearch = p.nama?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q);
@@ -56,7 +104,6 @@ export default function PenggunaPage() {
     { key: "pembeli", label: "Pembeli" },
     { key: "organisasi", label: "Organisasi" },
     { key: "proker", label: "Proker" },
-    { key: "admin", label: "Admin" },
   ];
 
   return (
@@ -89,14 +136,14 @@ export default function PenggunaPage() {
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  {["Nama", "Email", "Role", "Tgl. Daftar", "Aksi"].map((h) => (
+                  {["Nama", "Email", "Role", "Status", "Tgl. Daftar", "Aksi"].map((h) => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={5} className="text-center py-10 text-slate-400">Tidak ada pengguna ditemukan.</td></tr>
+                  <tr><td colSpan={6} className="text-center py-10 text-slate-400">Tidak ada pengguna ditemukan.</td></tr>
                 ) : filtered.map((p) => (
                   <tr key={p.id_pengguna} className="hover:bg-slate-50 transition-colors">
                     <td className="px-4 py-3 font-medium text-slate-900">{p.nama ?? "—"}</td>
@@ -104,12 +151,37 @@ export default function PenggunaPage() {
                     <td className="px-4 py-3">
                       <span className={`text-[11px] font-bold px-2 py-1 rounded-full ${ROLE_BADGE[p.role] ?? "bg-slate-100 text-slate-600"}`}>{p.role}</span>
                     </td>
+                    <td className="px-4 py-3">
+                      <span className={`text-[11px] font-bold px-2 py-1 rounded-full ${STATUS_BADGE[p.status] ?? "bg-slate-100 text-slate-600"}`}>
+                        {STATUS_LABEL[p.status] ?? p.status ?? "Aktif"}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 text-slate-500 text-xs">{new Date(p.created_at).toLocaleDateString("id-ID")}</td>
                     <td className="px-4 py-3">
-                      <button onClick={() => setSelected(p)}
-                        className="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 font-medium px-2.5 py-1 rounded-lg transition-colors">
-                        Detail
-                      </button>
+                      <div className="flex gap-2">
+                        <button onClick={() => setSelected(p)}
+                          className="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 font-medium px-2.5 py-1 rounded-lg transition-colors">
+                          Detail
+                        </button>
+                        {p.status !== "suspended" ? (
+                          <button onClick={() => updateStatus(p.id_pengguna, "suspended")} disabled={actionLoading === p.id_pengguna}
+                            className="flex items-center gap-1 text-xs bg-amber-50 text-amber-700 hover:bg-amber-100 font-medium px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50">
+                            {actionLoading === p.id_pengguna ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
+                            Suspend
+                          </button>
+                        ) : (
+                          <button onClick={() => updateStatus(p.id_pengguna, "active")} disabled={actionLoading === p.id_pengguna}
+                            className="flex items-center gap-1 text-xs bg-slate-50 text-slate-700 hover:bg-slate-100 font-medium px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50">
+                            {actionLoading === p.id_pengguna ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
+                            Aktifkan
+                          </button>
+                        )}
+                        <button onClick={() => deletePengguna(p)} disabled={actionLoading === p.id_pengguna}
+                          className="flex items-center gap-1 text-xs bg-red-50 text-red-700 hover:bg-red-100 font-medium px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50">
+                          {actionLoading === p.id_pengguna ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                          Hapus
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -135,6 +207,7 @@ export default function PenggunaPage() {
                   { label: "Nama", value: selected.nama },
                   { label: "Email", value: selected.email },
                   { label: "Role", value: selected.role },
+                  { label: "Status", value: STATUS_LABEL[selected.status] ?? selected.status ?? "Aktif" },
                   { label: "Tgl. Daftar", value: new Date(selected.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) },
                   { label: "ID", value: selected.id_pengguna },
                 ].map((row) => (
